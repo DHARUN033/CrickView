@@ -450,6 +450,10 @@ analyticsRouter.get("/matches/:id/scorecard", async (req: Request, res: Response
           name: string;
           runs: number;
           balls: number;
+          dots: number;
+          singles: number;
+          doubles: number;
+          triples: number;
           fours: number;
           sixes: number;
           dismissal: string;
@@ -498,6 +502,10 @@ analyticsRouter.get("/matches/:id/scorecard", async (req: Request, res: Response
             name: d.striker.name,
             runs: 0,
             balls: 0,
+            dots: 0,
+            singles: 0,
+            doubles: 0,
+            triples: 0,
             fours: 0,
             sixes: 0,
             dismissal: "not out",
@@ -506,8 +514,12 @@ analyticsRouter.get("/matches/:id/scorecard", async (req: Request, res: Response
         }
         battingStats[d.strikerId].runs += d.batterRuns;
         if (d.extraType !== "WIDE") battingStats[d.strikerId].balls += 1;
-        if (d.batterRuns === 4) battingStats[d.strikerId].fours += 1;
-        if (d.batterRuns === 6) battingStats[d.strikerId].sixes += 1;
+        if (d.batterRuns === 0) battingStats[d.strikerId].dots += 1;
+        else if (d.batterRuns === 1) battingStats[d.strikerId].singles += 1;
+        else if (d.batterRuns === 2) battingStats[d.strikerId].doubles += 1;
+        else if (d.batterRuns === 3) battingStats[d.strikerId].triples += 1;
+        else if (d.batterRuns === 4) battingStats[d.strikerId].fours += 1;
+        else if (d.batterRuns === 6) battingStats[d.strikerId].sixes += 1;
 
         if (!bowlingStats[d.bowlerId]) {
           bowlingStats[d.bowlerId] = {

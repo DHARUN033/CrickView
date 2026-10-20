@@ -345,6 +345,10 @@ export function App() {
                                 <th className="pb-2">Batter</th>
                                 <th className="pb-2 text-right">R</th>
                                 <th className="pb-2 text-right">B</th>
+                                <th className="pb-2 text-right">0s</th>
+                                <th className="pb-2 text-right">1s</th>
+                                <th className="pb-2 text-right">2s</th>
+                                <th className="pb-2 text-right">3s</th>
                                 <th className="pb-2 text-right">4s</th>
                                 <th className="pb-2 text-right">6s</th>
                                 <th className="pb-2 text-right font-bold text-emerald-400">SR</th>
@@ -359,8 +363,12 @@ export function App() {
                                   </td>
                                   <td className="py-2.5 text-right font-black text-white">{b.runs}</td>
                                   <td className="py-2.5 text-right text-slate-300">{b.balls}</td>
-                                  <td className="py-2.5 text-right text-slate-300">{b.fours}</td>
-                                  <td className="py-2.5 text-right text-slate-300">{b.sixes}</td>
+                                  <td className="py-2.5 text-right text-slate-400">{b.dots ?? 0}</td>
+                                  <td className="py-2.5 text-right text-slate-300">{b.singles ?? 0}</td>
+                                  <td className="py-2.5 text-right text-slate-300">{b.doubles ?? 0}</td>
+                                  <td className="py-2.5 text-right text-slate-300">{b.triples ?? 0}</td>
+                                  <td className="py-2.5 text-right text-amber-400 font-semibold">{b.fours}</td>
+                                  <td className="py-2.5 text-right text-indigo-400 font-bold">{b.sixes}</td>
                                   <td className="py-2.5 text-right font-bold text-emerald-400">{b.strikeRate}</td>
                                 </tr>
                               ))}
@@ -554,6 +562,10 @@ export function App() {
                           <th className="pb-2">Mapped Registered Player</th>
                           <th className="pb-2 text-right">R</th>
                           <th className="pb-2 text-right">B</th>
+                          <th className="pb-2 text-right">0s</th>
+                          <th className="pb-2 text-right">1s</th>
+                          <th className="pb-2 text-right">2s</th>
+                          <th className="pb-2 text-right">3s</th>
                           <th className="pb-2 text-right">4s</th>
                           <th className="pb-2 text-right">6s</th>
                           <th className="pb-2 text-right">SR</th>
@@ -603,7 +615,7 @@ export function App() {
                                   updated[idx].runs = parseInt(e.target.value, 10) || 0;
                                   setParsedScorecard({ ...parsedScorecard, batting: updated });
                                 }}
-                                className="w-12 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
+                                className="w-11 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
                               />
                             </td>
                             <td className="py-2.5 text-right text-slate-300">
@@ -615,31 +627,79 @@ export function App() {
                                   updated[idx].balls = parseInt(e.target.value, 10) || 0;
                                   setParsedScorecard({ ...parsedScorecard, batting: updated });
                                 }}
-                                className="w-12 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
+                                className="w-11 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
+                              />
+                            </td>
+                            <td className="py-2.5 text-right text-slate-400">
+                              <input
+                                type="number"
+                                value={b.dots || 0}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.batting];
+                                  updated[idx].dots = parseInt(e.target.value, 10) || 0;
+                                  setParsedScorecard({ ...parsedScorecard, batting: updated });
+                                }}
+                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-right text-xs text-slate-400"
                               />
                             </td>
                             <td className="py-2.5 text-right text-slate-300">
                               <input
                                 type="number"
-                                value={b.fours}
+                                value={b.singles || 0}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.batting];
+                                  updated[idx].singles = parseInt(e.target.value, 10) || 0;
+                                  setParsedScorecard({ ...parsedScorecard, batting: updated });
+                                }}
+                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-right text-xs text-slate-300"
+                              />
+                            </td>
+                            <td className="py-2.5 text-right text-slate-300">
+                              <input
+                                type="number"
+                                value={b.doubles || 0}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.batting];
+                                  updated[idx].doubles = parseInt(e.target.value, 10) || 0;
+                                  setParsedScorecard({ ...parsedScorecard, batting: updated });
+                                }}
+                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-right text-xs text-slate-300"
+                              />
+                            </td>
+                            <td className="py-2.5 text-right text-slate-300">
+                              <input
+                                type="number"
+                                value={b.triples || 0}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.batting];
+                                  updated[idx].triples = parseInt(e.target.value, 10) || 0;
+                                  setParsedScorecard({ ...parsedScorecard, batting: updated });
+                                }}
+                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-right text-xs text-slate-300"
+                              />
+                            </td>
+                            <td className="py-2.5 text-right text-amber-400 font-semibold">
+                              <input
+                                type="number"
+                                value={b.fours || 0}
                                 onChange={(e) => {
                                   const updated = [...parsedScorecard.batting];
                                   updated[idx].fours = parseInt(e.target.value, 10) || 0;
                                   setParsedScorecard({ ...parsedScorecard, batting: updated });
                                 }}
-                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
+                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-right text-xs text-amber-400 font-semibold"
                               />
                             </td>
-                            <td className="py-2.5 text-right text-slate-300">
+                            <td className="py-2.5 text-right text-indigo-400 font-bold">
                               <input
                                 type="number"
-                                value={b.sixes}
+                                value={b.sixes || 0}
                                 onChange={(e) => {
                                   const updated = [...parsedScorecard.batting];
                                   updated[idx].sixes = parseInt(e.target.value, 10) || 0;
                                   setParsedScorecard({ ...parsedScorecard, batting: updated });
                                 }}
-                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
+                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1 py-0.5 text-right text-xs text-indigo-400 font-bold"
                               />
                             </td>
                             <td className="py-2.5 text-right font-bold text-emerald-400">
@@ -685,7 +745,18 @@ export function App() {
                       <tbody className="divide-y divide-slate-800/60">
                         {parsedScorecard.bowling.map((bw: any, idx: number) => (
                           <tr key={idx} className="hover:bg-slate-800/30">
-                            <td className="py-2.5 font-bold text-white">{bw.name}</td>
+                            <td className="py-2.5 font-bold text-white">
+                              <input
+                                type="text"
+                                value={bw.name}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.bowling];
+                                  updated[idx].name = e.target.value;
+                                  setParsedScorecard({ ...parsedScorecard, bowling: updated });
+                                }}
+                                className="bg-transparent border-b border-slate-700 text-xs text-white py-0.5 focus:border-emerald-500 focus:outline-none"
+                              />
+                            </td>
                             <td className="py-2.5">
                               <select
                                 value={bw.mappedPlayerId || ""}
@@ -704,11 +775,57 @@ export function App() {
                                 ))}
                               </select>
                             </td>
-                            <td className="py-2.5 text-right text-slate-300">{bw.overs}</td>
-                            <td className="py-2.5 text-right font-bold text-white">{bw.runs}</td>
-                            <td className="py-2.5 text-right text-slate-400">{bw.extras}</td>
-                            <td className="py-2.5 text-right font-black text-rose-400">{bw.wickets}</td>
-                            <td className="py-2.5 text-right font-bold text-emerald-400">{bw.economy}</td>
+                            <td className="py-2.5 text-right text-slate-300">
+                              <input
+                                type="text"
+                                value={bw.overs}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.bowling];
+                                  updated[idx].overs = e.target.value;
+                                  setParsedScorecard({ ...parsedScorecard, bowling: updated });
+                                }}
+                                className="w-12 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
+                              />
+                            </td>
+                            <td className="py-2.5 text-right font-bold text-white">
+                              <input
+                                type="number"
+                                value={bw.runs}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.bowling];
+                                  updated[idx].runs = parseInt(e.target.value, 10) || 0;
+                                  setParsedScorecard({ ...parsedScorecard, bowling: updated });
+                                }}
+                                className="w-12 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
+                              />
+                            </td>
+                            <td className="py-2.5 text-right text-slate-400">
+                              <input
+                                type="number"
+                                value={bw.extras}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.bowling];
+                                  updated[idx].extras = parseInt(e.target.value, 10) || 0;
+                                  setParsedScorecard({ ...parsedScorecard, bowling: updated });
+                                }}
+                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-white"
+                              />
+                            </td>
+                            <td className="py-2.5 text-right font-black text-rose-400">
+                              <input
+                                type="number"
+                                value={bw.wickets}
+                                onChange={(e) => {
+                                  const updated = [...parsedScorecard.bowling];
+                                  updated[idx].wickets = parseInt(e.target.value, 10) || 0;
+                                  setParsedScorecard({ ...parsedScorecard, bowling: updated });
+                                }}
+                                className="w-10 bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-right text-xs text-rose-400 font-black"
+                              />
+                            </td>
+                            <td className="py-2.5 text-right font-bold text-emerald-400">
+                              {parseFloat(bw.overs) > 0 ? (bw.runs / parseFloat(bw.overs)).toFixed(1) : bw.economy}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
