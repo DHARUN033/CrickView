@@ -1,0 +1,23 @@
+{
+  "name": "crickview-root",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:shared": "npm --workspace=@crickview/shared run build",
+    "dev:backend": "npm --workspace=@crickview/backend run dev",
+    "dev:frontend": "npm --workspace=@crickview/frontend run dev",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "seed": "npm --workspace=@crickview/backend run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "typescript": "^5.7.3"
+  }
+}

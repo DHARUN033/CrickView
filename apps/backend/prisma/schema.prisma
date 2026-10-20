@@ -1,0 +1,373 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  ADMIN
+  SCORER
+  VIEWER
+}
+
+enum MatchFormat {
+  T20
+  ODI
+  CUSTOM
+}
+
+enum MatchStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  NO_RESULT
+}
+
+enum TossDecision {
+  BAT
+  BOWL
+}
+
+enum InningsStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  DECLARED
+}
+
+enum DismissalType {
+  BOWLED
+  CAUGHT
+  LBW
+  RUN_OUT
+  STUMPED
+  HIT_WICKET
+  RETIRED_HURT
+  RETIRED_OUT
+  OBSTRUCTING_FIELD
+  TIMED_OUT
+}
+
+enum ExtraType {
+  NONE
+  WIDE
+  NO_BALL
+  BYE
+  LEG_BYE
+  PENALTY
+}
+
+enum BattingStyle {
+  RIGHT_HAND
+  LEFT_HAND
+}
+
+enum BowlingStyle {
+  RIGHT_ARM_FAST
+  RIGHT_ARM_MEDIUM
+  RIGHT_ARM_SPIN
+  LEFT_ARM_FAST
+  LEFT_ARM_MEDIUM
+  LEFT_ARM_SPIN
+  NONE
+}
+
+enum PlayerRole {
+  BATTER
+  BOWLER
+  ALL_ROUNDER
+  WICKET_KEEPER
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         UserRole   @default(VIEWER)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  scoredMatches Match[]   @relation("ScorerMatches")
+  auditLogs     AuditLog[]
+  importJobs    ImportJob[]
+
+  @@map("users")
+}
+
+model Tournament {
+  id             String      @id @default(uuid())
+  name           String
+  season         String
+  description    String?
+  format         MatchFormat @default(T20)
+  defaultOvers   Int         @default(20)
+  maxWickets     Int         @default(10)
+  pointsWin      Int         @default(2)
+  pointsTie      Int         @default(1)
+  pointsNoResult Int         @default(1)
+  startDate      DateTime?
+  endDate        DateTime?
+  venue          String?
+  isArchived     Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  teams          TournamentTeam[]
+  matches        Match[]
+
+  @@unique([name, season])
+  @@map("tournaments")
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  shortName   String   @unique
+  logoUrl     String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tournaments TournamentTeam[]
+  homeMatches Match[]          @relation("TeamAMatches")
+  awayMatches Match[]          @relation("TeamBMatches")
+  tossMatches Match[]          @relation("TossWinnerMatches")
+  matchSquads MatchSquad[]
+  players     TeamPlayer[]
+
+  @@map("teams")
+}
+
+model Player {
+  id               String       @id @default(uuid())
+  uniquePlayerCode String?      @unique
+  name             String
+  displayName      String
+  photoUrl         String?
+  primaryRole      PlayerRole   @default(BATTER)
+  battingStyle     BattingStyle @default(RIGHT_HAND)
+  bowlingStyle     BowlingStyle @default(NONE)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  teams        TeamPlayer[]
+  matchSquads  MatchSquadPlayer[]
+  strikerDeliveries    Delivery[] @relation("StrikerDeliveries")
+  nonStrikerDeliveries Delivery[] @relation("NonStrikerDeliveries")
+  bowlerDeliveries     Delivery[] @relation("BowlerDeliveries")
+  dismissals           Wicket[]   @relation("PlayerDismissed")
+  assistedWickets      Wicket[]   @relation("PlayerAssisted")
+  playerOfTheMatch     Match[]    @relation("PlayerOfTheMatch")
+
+  @@map("players")
+}
+
+model TournamentTeam {
+  id           String     @id @default(uuid())
+  tournamentId String
+  teamId       String
+  registeredAt DateTime   @default(now())
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team         Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, teamId])
+  @@map("tournament_teams")
+}
+
+model TeamPlayer {
+  id       String   @id @default(uuid())
+  teamId   String
+  playerId String
+  season   String
+  jerseyNo Int?
+
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player   Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, playerId, season])
+  @@map("team_players")
+}
+
+model Match {
+  id           String      @id @default(uuid())
+  tournamentId String
+  teamAId      String
+  teamBId      String
+  scheduledAt  DateTime
+  venue        String
+  oversLimit   Int         @default(20)
+  matchFormat  MatchFormat @default(T20)
+  status       MatchStatus @default(SCHEDULED)
+  
+  tossWinnerId String?
+  tossDecision TossDecision?
+
+  scorerId     String?
+  playerOfTheMatchId String?
+  resultSummary      String?
+  winnerTeamId       String?
+  isAggregateOnly    Boolean     @default(false)
+  notes              String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  tournament       Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  teamA            Team        @relation("TeamAMatches", fields: [teamAId], references: [id])
+  teamB            Team        @relation("TeamBMatches", fields: [teamBId], references: [id])
+  tossWinner       Team?       @relation("TossWinnerMatches", fields: [tossWinnerId], references: [id])
+  scorer           User?       @relation("ScorerMatches", fields: [scorerId], references: [id])
+  playerOfTheMatch Player?     @relation("PlayerOfTheMatch", fields: [playerOfTheMatchId], references: [id])
+
+  innings          Innings[]
+  squads           MatchSquad[]
+  auditLogs        AuditLog[]
+
+  @@map("matches")
+}
+
+model MatchSquad {
+  id          String   @id @default(uuid())
+  matchId     String
+  teamId      String
+  captainId   String
+  keeperId    String
+
+  match       Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  players     MatchSquadPlayer[]
+
+  @@unique([matchId, teamId])
+  @@map("match_squads")
+}
+
+model MatchSquadPlayer {
+  id           String     @id @default(uuid())
+  matchSquadId String
+  playerId     String
+  isPlayingXI  Boolean    @default(true)
+  battingOrder Int?
+
+  matchSquad   MatchSquad @relation(fields: [matchSquadId], references: [id], onDelete: Cascade)
+  player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchSquadId, playerId])
+  @@map("match_squad_players")
+}
+
+model Innings {
+  id             String        @id @default(uuid())
+  matchId        String
+  inningsNumber  Int
+  battingTeamId  String
+  bowlingTeamId  String
+  totalRuns      Int           @default(0)
+  wickets        Int           @default(0)
+  legalBalls     Int           @default(0) // Crucial: stored as integer balls, never float!
+  totalExtras    Int           @default(0)
+  wides          Int           @default(0)
+  noBalls        Int           @default(0)
+  byes           Int           @default(0)
+  legByes        Int           @default(0)
+  penalties      Int           @default(0)
+  status         InningsStatus @default(NOT_STARTED)
+  targetRuns     Int?
+  isCompleted    Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  match          Match         @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  deliveries     Delivery[]
+
+  @@unique([matchId, inningsNumber])
+  @@map("innings")
+}
+
+model Delivery {
+  id             String    @id @default(uuid())
+  inningsId      String
+  sequenceNumber Int       // Sequential strictly 1..N within innings
+  overNumber     Int       // 0-indexed over: 0 for 1st over, 1 for 2nd...
+  ballInOver     Int       // Legal ball in that over (1..6)
+  isLegal        Boolean   @default(true)
+  
+  bowlerId       String
+  strikerId      String
+  nonStrikerId   String
+  
+  batterRuns     Int       @default(0)
+  extraType      ExtraType @default(NONE)
+  extraRuns      Int       @default(0)
+  totalRuns      Int       @default(0) // batterRuns + extraRuns
+  runsConceded   Int       @default(0) // Runs charged to bowler (excludes Byes & LegByes)
+  
+  isWicket       Boolean   @default(false)
+  commentary     String?
+  idempotencyKey String?   @unique
+  createdAt      DateTime  @default(now())
+
+  innings        Innings   @relation(fields: [inningsId], references: [id], onDelete: Cascade)
+  bowler         Player    @relation("BowlerDeliveries", fields: [bowlerId], references: [id])
+  striker        Player    @relation("StrikerDeliveries", fields: [strikerId], references: [id])
+  nonStriker     Player    @relation("NonStrikerDeliveries", fields: [nonStrikerId], references: [id])
+  wicket         Wicket?
+
+  @@unique([inningsId, sequenceNumber])
+  @@index([inningsId, overNumber])
+  @@map("deliveries")
+}
+
+model Wicket {
+  id               String        @id @default(uuid())
+  deliveryId       String        @unique
+  dismissalType    DismissalType
+  playerOutId      String
+  assistedById     String?
+  isBowlerCredited Boolean       @default(true)
+  newBatterId      String?
+  createdAt        DateTime      @default(now())
+
+  delivery         Delivery      @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  playerOut        Player        @relation("PlayerDismissed", fields: [playerOutId], references: [id])
+  assistedBy       Player?       @relation("PlayerAssisted", fields: [assistedById], references: [id])
+
+  @@map("wickets")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  matchId    String?
+  userId     String?
+  action     String   // e.g., "DELIVERY_CORRECTED", "MATCH_FINALIZED", "MATCH_REOPENED"
+  details    String   // JSON string of before/after state or correction notes
+  createdAt  DateTime @default(now())
+
+  match      Match?   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([matchId])
+  @@map("audit_logs")
+}
+
+model ImportJob {
+  id           String   @id @default(uuid())
+  userId       String
+  fileName     String
+  fileType     String   // "CSV" or "EXCEL"
+  status       String   // "PENDING", "PREVIEWED", "COMPLETED", "FAILED"
+  recordCount  Int      @default(0)
+  successCount Int      @default(0)
+  errorCount   Int      @default(0)
+  reportJson   String?  // JSON string of validation errors and summary
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("import_jobs")
+}
